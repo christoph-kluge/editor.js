@@ -14,6 +14,7 @@ export interface SavedData {
  */
 export interface ValidatedData {
     tool?: string;
+    id?: string;
     data?: BlockToolData;
     time?: number;
     isValid: boolean;

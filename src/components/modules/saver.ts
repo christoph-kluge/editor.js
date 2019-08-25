@@ -6,8 +6,8 @@
  * @version 2.0.0
  */
 import Module from '../__module';
-import {OutputData} from '../../../types';
-import {ValidatedData} from '../../types-internal/block-data';
+import { OutputData } from '../../../types';
+import { ValidatedData } from '../../types-internal/block-data';
 import Block from '../block';
 
 declare const VERSION: string;
@@ -25,7 +25,7 @@ export default class Saver extends Module {
    * @return {OutputData}
    */
   public async save(): Promise<OutputData> {
-    const {BlockManager, Sanitizer, ModificationsObserver} = this.Editor;
+    const { BlockManager, Sanitizer, ModificationsObserver } = this.Editor;
     const blocks = BlockManager.blocks,
       chainData = [];
 
@@ -35,7 +35,7 @@ export default class Saver extends Module {
     ModificationsObserver.disable();
 
     blocks.forEach((block: Block) => {
-     chainData.push(this.getSavedData(block));
+      chainData.push(this.getSavedData(block));
     });
 
     const extractedData = await Promise.all(chainData);
@@ -52,10 +52,11 @@ export default class Saver extends Module {
    * @return {ValidatedData} - Tool's validated data
    */
   private async getSavedData(block: Block): Promise<ValidatedData> {
-      const blockData = await block.save();
-      const isValid = blockData && await block.validate(blockData.data);
+    const blockData = await block.save();
+    const isValid = blockData && await block.validate(blockData.data);
 
-      return {...blockData, isValid};
+    const saved = { ...blockData, isValid, id: block.id };
+    return saved;
   }
 
   /**
@@ -69,7 +70,7 @@ export default class Saver extends Module {
 
     console.groupCollapsed('[Editor.js saving]:');
 
-    allExtractedData.forEach(({tool, data, time, isValid}) => {
+    allExtractedData.forEach(({ tool, data, time, isValid, id }) => {
       totalTime += time;
 
       /**
@@ -95,11 +96,13 @@ export default class Saver extends Module {
 
       blocks.push({
         type: tool,
+        id,
         data,
       });
     });
 
     console.log('Total', totalTime);
+    console.groupEnd();
     console.groupEnd();
 
     return {

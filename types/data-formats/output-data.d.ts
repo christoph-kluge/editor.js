@@ -1,4 +1,4 @@
-import {BlockToolData} from '../tools';
+import { BlockToolData } from '../tools';
 
 export interface OutputData {
   /**
@@ -16,6 +16,7 @@ export interface OutputData {
    */
   blocks: Array<{
     type: string;
+    id: string;
     data: BlockToolData
   }>;
 }

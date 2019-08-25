@@ -11,7 +11,7 @@ import Module from '../__module';
 import $ from '../dom';
 import _ from '../utils';
 import Blocks from '../blocks';
-import {BlockTool, BlockToolConstructable, BlockToolData, PasteEvent, ToolConfig} from '../../../types';
+import { BlockTool, BlockToolConstructable, BlockToolData, PasteEvent, ToolConfig } from '../../../types';
 
 /**
  * @typedef {BlockManager} BlockManager
@@ -137,6 +137,15 @@ export default class BlockManager extends Module {
     return this.blocks.every((block) => block.isEmpty);
   }
 
+  public static generateUuidv4(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      // tslint:disable: no-bitwise
+      // tslint:disable-next-line: triple-equals
+      const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
   /**
    * Index of current working block
    *
@@ -207,10 +216,11 @@ export default class BlockManager extends Module {
    *
    * @return {Block}
    */
-  public composeBlock(toolName: string, data: BlockToolData = {}, settings: ToolConfig = {}): Block {
+  public composeBlock(toolName: string, data: BlockToolData = {}, settings: ToolConfig = {},
+                      id: string = BlockManager.generateUuidv4()): Block {
     const toolInstance = this.Editor.Tools.construct(toolName, data) as BlockTool;
     const toolClass = this.Editor.Tools.available[toolName] as BlockToolConstructable;
-    const block = new Block(toolName, toolInstance, toolClass, settings, this.Editor.API.methods);
+    const block = new Block(toolName, toolInstance, toolClass, settings, this.Editor.API.methods, id);
 
     this.bindEvents(block);
 
@@ -234,9 +244,9 @@ export default class BlockManager extends Module {
     settings: ToolConfig = {},
     index: number = this.currentBlockIndex + 1,
     needToFocus: boolean = true,
+    id: string = BlockManager.generateUuidv4(),
   ): Block {
-    const block = this.composeBlock(toolName, data, settings);
-
+    const block = this.composeBlock(toolName, data, settings, id);
     this._blocks[index] = block;
 
     if (needToFocus) {
@@ -369,7 +379,7 @@ export default class BlockManager extends Module {
    * and returns first Block index where started removing...
    * @return number|undefined
    */
-  public removeSelectedBlocks(): number|undefined {
+  public removeSelectedBlocks(): number | undefined {
     let firstSelectedBlockIndex;
 
     /**
@@ -496,7 +506,7 @@ export default class BlockManager extends Module {
    * Remove selection from all Blocks
    */
   public clearFocused(): void {
-    this.blocks.forEach( (block) => block.focused = false);
+    this.blocks.forEach((block) => block.focused = false);
   }
 
   /**
@@ -595,7 +605,7 @@ export default class BlockManager extends Module {
    * @param {Object} block
    */
   private bindEvents(block: Block): void {
-    const {BlockEvents, Listeners} = this.Editor;
+    const { BlockEvents, Listeners } = this.Editor;
 
     Listeners.on(block.holder, 'keydown', (event) => BlockEvents.keydown(event as KeyboardEvent), true);
     Listeners.on(block.holder, 'mouseup', (event) => BlockEvents.mouseUp(event));

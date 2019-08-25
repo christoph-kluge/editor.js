@@ -1,7 +1,8 @@
 import $ from './dom';
 import _ from './utils';
-import {EditorConfig, OutputData, SanitizerConfig} from '../../types';
-import {EditorModules} from '../types-internal/editor-modules';
+import { EditorConfig, OutputData, SanitizerConfig } from '../../types';
+import { EditorModules } from '../types-internal/editor-modules';
+import BlockManager from './modules/blockManager';
 
 /**
  * @typedef {Core} Core - editor core class
@@ -56,7 +57,7 @@ export default class Core {
    * @param {EditorConfig} config - user configuration
    *
    */
-  constructor(config?: EditorConfig|string) {
+  constructor(config?: EditorConfig | string) {
     /**
      * Ready promise. Resolved if Editor.js is ready to work, rejected otherwise
      */
@@ -79,7 +80,7 @@ export default class Core {
 
         setTimeout(() => {
           if ((this.configuration as EditorConfig).autofocus) {
-            const {BlockManager, Caret} = this.moduleInstances;
+            const { BlockManager, Caret } = this.moduleInstances;
 
             Caret.setToBlock(BlockManager.blocks[0], Caret.positions.START);
           }
@@ -109,7 +110,7 @@ export default class Core {
    * Setting for configuration
    * @param {EditorConfig|string|undefined} config
    */
-  set configuration(config: EditorConfig|string) {
+  set configuration(config: EditorConfig | string) {
     /**
      * Process zero-configuration or with only holderId
      * Make config object
@@ -159,8 +160,9 @@ export default class Core {
      * @type {{type: (*), data: {text: null}}}
      */
     const initialBlockData = {
-      type : this.config.initialBlock,
-      data : {},
+      type: this.config.initialBlock,
+      data: {},
+      id: BlockManager.generateUuidv4(),
     };
 
     this.config.placeholder = this.config.placeholder || false;
@@ -173,18 +175,18 @@ export default class Core {
     this.config.hideToolbar = this.config.hideToolbar ? this.config.hideToolbar : false;
     this.config.tools = this.config.tools || {};
     this.config.data = this.config.data || {} as OutputData;
-    this.config.onReady = this.config.onReady || (() => {});
-    this.config.onChange = this.config.onChange || (() => {});
+    this.config.onReady = this.config.onReady || (() => { });
+    this.config.onChange = this.config.onChange || (() => { });
 
     /**
      * Initialize Blocks to pass data to the Renderer
      */
     if (_.isEmpty(this.config.data)) {
       this.config.data = {} as OutputData;
-      this.config.data.blocks = [ initialBlockData ];
+      this.config.data.blocks = [initialBlockData];
     } else {
       if (!this.config.data.blocks || this.config.data.blocks.length === 0) {
-        this.config.data.blocks = [ initialBlockData ];
+        this.config.data.blocks = [initialBlockData];
       }
     }
   }
@@ -193,7 +195,7 @@ export default class Core {
    * Returns private property
    * @returns {EditorConfig}
    */
-  get configuration(): EditorConfig|string {
+  get configuration(): EditorConfig | string {
     return this.config;
   }
 
@@ -276,7 +278,7 @@ export default class Core {
    * Make modules instances and save it to the @property this.moduleInstances
    */
   private constructModules(): void {
-    modules.forEach( (Module) => {
+    modules.forEach((Module) => {
       try {
         /**
          * We use class name provided by displayName property
@@ -286,10 +288,10 @@ export default class Core {
          * @see  https://www.npmjs.com/package/babel-plugin-class-display-name
          */
         this.moduleInstances[Module.displayName] = new Module({
-          config : this.configuration,
+          config: this.configuration,
         });
-      } catch ( e ) {
-        _.log(`Module ${Module.displayName} skipped because`, 'warn',  e);
+      } catch (e) {
+        _.log(`Module ${Module.displayName} skipped because`, 'warn', e);
       }
     });
   }

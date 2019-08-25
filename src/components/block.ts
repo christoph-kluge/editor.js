@@ -9,7 +9,7 @@ import {
   ToolConfig,
 } from '../../types';
 
-import {SavedData} from '../types-internal/block-data';
+import { SavedData } from '../types-internal/block-data';
 import $ from './dom';
 import _ from './utils';
 
@@ -315,6 +315,11 @@ export default class Block {
   public tunes: BlockTune[];
 
   /**
+   * unique identifier
+   */
+  public id: string;
+
+  /**
    * Cached inputs
    * @type {HTMLElement[]}
    */
@@ -351,6 +356,7 @@ export default class Block {
     toolClass: BlockToolConstructable,
     settings: ToolConfig,
     apiMethods: API,
+    id: string,
   ) {
     this.name = toolName;
     this.tool = toolInstance;
@@ -358,6 +364,7 @@ export default class Block {
     this.settings = settings;
     this.api = apiMethods;
     this.holder = this.compose();
+    this.id = id;
 
     this.mutationObserver = new MutationObserver(this.didMutated);
 
@@ -389,14 +396,14 @@ export default class Block {
    * @param {Object} data
    */
   public async mergeWith(data: BlockToolData): Promise<void> {
-      await this.tool.merge(data);
+    await this.tool.merge(data);
   }
   /**
    * Extracts data from Block
    * Groups Tool's save processing time
    * @return {Object}
    */
-  public async save(): Promise<void|SavedData> {
+  public async save(): Promise<void | SavedData> {
     const extractedBlock = await this.tool.save(this.pluginsContent as HTMLElement);
 
     /**
@@ -413,7 +420,7 @@ export default class Block {
         return {
           tool: this.name,
           data: finishedExtraction,
-          time : measuringEnd - measuringStart,
+          time: measuringEnd - measuringStart,
         };
       })
       .catch((error) => {
@@ -449,7 +456,7 @@ export default class Block {
     const tunesList = [MoveUpTune, DeleteTune, MoveDownTune];
 
     // Pluck tunes list and return tune instances with passed Editor API and settings
-    return tunesList.map( (tune: BlockTuneConstructable) => {
+    return tunesList.map((tune: BlockTuneConstructable) => {
       return new tune({
         api: this.api,
         settings: this.settings,
@@ -464,7 +471,7 @@ export default class Block {
   public renderTunes(): DocumentFragment {
     const tunesElement = document.createDocumentFragment();
 
-    this.tunes.forEach( (tune) => {
+    this.tunes.forEach((tune) => {
       $.append(tunesElement, tune.render());
     });
 
@@ -485,7 +492,7 @@ export default class Block {
     /**
      * Observe DOM mutations to update Block inputs
      */
-    this.mutationObserver.observe(this.holder, {childList: true, subtree: true});
+    this.mutationObserver.observe(this.holder, { childList: true, subtree: true });
   }
 
   /**
@@ -517,7 +524,7 @@ export default class Block {
   private compose(): HTMLDivElement {
     const wrapper = $.make('div', Block.CSS.wrapper) as HTMLDivElement,
       contentNode = $.make('div', Block.CSS.content),
-      pluginsContent  = this.tool.render();
+      pluginsContent = this.tool.render();
 
     contentNode.appendChild(pluginsContent);
     wrapper.appendChild(contentNode);
