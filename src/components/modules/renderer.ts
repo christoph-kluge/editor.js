@@ -70,7 +70,7 @@ export default class Renderer extends Module {
 
     if (tool in Tools.available) {
       try {
-        BlockManager.insert(tool, data, settings, BlockManager.currentBlockIndex + 1, false, id);
+        BlockManager.insert(tool, data, settings, BlockManager.currentBlockIndex + 1, true, id);
       } catch (error) {
         _.log(`Block «${tool}» skipped because of plugins error`, 'warn', data);
         throw Error(error);

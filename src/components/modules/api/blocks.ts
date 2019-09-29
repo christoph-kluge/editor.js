@@ -3,6 +3,7 @@ import Module from '../../__module';
 import {Blocks} from '../../../../types/api';
 import {BlockToolData, OutputData, ToolConfig} from '../../../../types';
 import _ from './../../utils';
+import BlockManager from '../blockManager';
 
 /**
  * @class BlocksAPI
@@ -148,6 +149,7 @@ export default class BlocksAPI extends Module {
    * @param {ToolConfig} config — Tool config
    * @param {number?} index — index where to insert new Block
    * @param {boolean?} needToFocus - flag to focus inserted Block
+   * @param {string} id - unique id for this block
    */
   public insert = (
     type: string = this.config.initialBlock,
@@ -155,6 +157,7 @@ export default class BlocksAPI extends Module {
     config: ToolConfig = {},
     index?: number,
     needToFocus?: boolean,
+    id: string = BlockManager.generateUuidv4(),
   ): void => {
     this.Editor.BlockManager.insert(
       type,
@@ -162,6 +165,7 @@ export default class BlocksAPI extends Module {
       config,
       index,
       needToFocus,
+      id,
     );
   }
 
