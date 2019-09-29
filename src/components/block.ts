@@ -349,6 +349,7 @@ export default class Block {
    * @param {Object} toolClass — Tool's class
    * @param {Object} settings - default settings
    * @param {Object} apiMethods - Editor API
+   * @param {String} id - Unique BlockId
    */
   constructor(
     toolName: string,

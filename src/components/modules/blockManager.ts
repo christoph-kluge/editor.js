@@ -235,6 +235,7 @@ export default class BlockManager extends Module {
    * @param {Object} settings - default settings
    * @param {number} index - index where to insert new Block
    * @param {boolean} needToFocus - flag shows if needed to update current Block index
+   * @param {String} id - a unique block id
    *
    * @return {Block}
    */

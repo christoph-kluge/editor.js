@@ -63,13 +63,14 @@ export default class Renderer extends Module {
    */
   public async insertBlock(item): Promise<void> {
     const { Tools, BlockManager } = this.Editor;
+    const id = item.id;
     const tool = item.type;
     const data = item.data;
     const settings = item.settings;
 
     if (tool in Tools.available) {
       try {
-        BlockManager.insert(tool, data, settings);
+        BlockManager.insert(tool, data, settings, BlockManager.currentBlockIndex + 1, false, id);
       } catch (error) {
         _.log(`Block «${tool}» skipped because of plugins error`, 'warn', data);
         throw Error(error);
