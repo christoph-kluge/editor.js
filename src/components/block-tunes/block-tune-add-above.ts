@@ -48,7 +48,7 @@ export default class AddAboveTune implements BlockTune {
    */
   public render(): HTMLElement {
     this.nodes.button = $.make('div', [this.CSS.button], {});
-    this.nodes.button.appendChild($.svg('add-row-above', 12, 12));
+    this.nodes.button.appendChild($.svg('add-row-above', 16, 16));
     this.api.listeners.on(this.nodes.button, 'click', (event: MouseEvent) => this.handleClick(event), false);
 
     /**

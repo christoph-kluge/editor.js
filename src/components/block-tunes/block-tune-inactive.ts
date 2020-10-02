@@ -52,7 +52,7 @@ export default class InactiveTune implements BlockTune {
     const currentBlock = this.api.blocks.getBlockByIndex(this.api.blocks.getCurrentBlockIndex());
 
     this.nodes.button = $.make('div', [this.CSS.button], {});
-    this.nodes.button.appendChild($.svg('visible', 36, 12));
+    this.nodes.button.appendChild($.svg('visible', 16, 16));
     this.api.listeners.on(this.nodes.button, 'click', (event: MouseEvent) => this.handleClick(event), false);
 
     /**
