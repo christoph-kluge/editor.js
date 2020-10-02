@@ -17,6 +17,14 @@ export interface PasteConfig {
   patterns?: {[key: string]: RegExp};
 
   /**
+   * Object of string patterns Tool can substitute.
+   * Key is your internal key and value is RegExp
+   *
+   * @type {{[key: string]: Regexp}}
+   */
+  patternsFull?: {[key: string]: RegExp};
+
+  /**
    * Object with arrays of extensions and MIME types Tool can substitute
    */
   files?: {extensions?: string[], mimeTypes?: string[]};

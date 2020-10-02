@@ -129,6 +129,9 @@ export default class Paste extends Module {
   /** Patterns` substitutions parameters */
   private toolsPatterns: PatternSubstitute[] = [];
 
+  /** Patterns` substitutions parameters */
+  private toolsPatternsFull: PatternSubstitute[] = [];
+
   /** Files` substitutions parameters */
   private toolsFiles: {
     [tool: string]: FilesSubstitution;
@@ -207,10 +210,36 @@ export default class Paste extends Module {
 
     /** If there is no HTML or HTML string is equal to plain one, process it as plain text */
     if (!cleanData.trim() || cleanData.trim() === plainData || !$.isHTMLString(cleanData)) {
+      const event = await this.processPatternFull(plainData);
+      if (event) {
+        await this.processFullPatternMatch(plainData, event);
+        return;
+      }
+
       await this.processText(plainData);
     } else {
+      const event = await this.processPatternFull(cleanData);
+      if (event) {
+        await this.processFullPatternMatch(cleanData, event);
+        return;
+      }
+
       await this.processText(cleanData, true);
     }
+  }
+
+  public async processFullPatternMatch(data: string, event): Promise<void> {
+    const content = $.make('div');
+    content.textContent = data;
+
+    return this.processSingleBlock({
+      content,
+      isBlock: true,
+      tool: event.tool,
+      event: this.composePasteEvent('patternFull', {
+        data: content,
+      }),
+    });
   }
 
   /**
@@ -293,6 +322,7 @@ export default class Paste extends Module {
       this.getTagsConfig(name, toolPasteConfig);
       this.getFilesConfig(name, toolPasteConfig);
       this.getPatternsConfig(name, toolPasteConfig);
+      this.getPatternsFullConfig(name, toolPasteConfig);
     } catch (e) {
       _.log(
         `Paste handling for «${name}» Tool hasn't been set up because of the error`,
@@ -393,6 +423,35 @@ export default class Paste extends Module {
       }
 
       this.toolsPatterns.push({
+        key,
+        pattern,
+        tool: name,
+      });
+    });
+  }
+
+
+  /**
+   * Get RegExp patterns to substitute by Tool
+   *
+   * @param {string} name - Tool name
+   * @param {PasteConfig} toolPasteConfig - Tool onPaste configuration
+   */
+  private getPatternsFullConfig(name: string, toolPasteConfig: PasteConfig): void {
+    if (!toolPasteConfig.patternsFull || _.isEmpty(toolPasteConfig.patternsFull)) {
+      return;
+    }
+
+    Object.entries(toolPasteConfig.patternsFull).forEach(([key, pattern]: [string, RegExp]) => {
+      /** Still need to validate pattern as it provided by user */
+      if (!(pattern instanceof RegExp)) {
+        _.log(
+          `PatternFull ${pattern} for «${name}» Tool is skipped because it should be a Regexp instance.`,
+          'warn'
+        );
+      }
+
+      this.toolsPatternsFull.push({
         key,
         pattern,
         tool: name,
@@ -672,6 +731,38 @@ export default class Paste extends Module {
     } else {
       this.insertBlock(dataToInsert);
     }
+  }
+
+  /**
+   * Get patterns` matches (for the whole paste)
+   *
+   * @param {string} text - text to process
+   *
+   * @returns {Promise<{event: PasteEvent, tool: string}>}
+   */
+  private async processPatternFull(text: string): Promise<{event: PasteEvent; tool: string}> {
+    const pattern = this.toolsPatternsFull.find((substitute) => {
+      const execResult = substitute.pattern.exec(text);
+      if (!execResult) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (!pattern) {
+      return;
+    }
+
+    const event = this.composePasteEvent('patternFull', {
+      key: pattern.key,
+      data: text,
+    });
+
+    return {
+      event,
+      tool: pattern.tool,
+    };
   }
 
   /**
