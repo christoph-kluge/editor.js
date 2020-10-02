@@ -78,6 +78,7 @@ export interface BlockTool extends BaseTool {
  * Describe constructor parameters
  */
 export interface BlockToolConstructorOptions<D extends object = any, C extends object = any> {
+  id?: string;
   api: API;
   data: BlockToolData<D>;
   config?: ToolConfig<C>;
