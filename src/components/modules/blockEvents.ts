@@ -24,27 +24,28 @@ export default class BlockEvents extends Module {
     /**
      * Fire keydown processor by event.keyCode
      */
-    switch (event.keyCode) {
-      case _.keyCodes.BACKSPACE:
+    switch (true) {
+      case event.keyCode === _.keyCodes.BACKSPACE:
         this.backspace(event);
         break;
 
-      case _.keyCodes.ENTER:
+      case event.keyCode === _.keyCodes.ENTER:
         this.enter(event);
         break;
 
-      case _.keyCodes.DOWN:
-      case _.keyCodes.RIGHT:
+      case event.keyCode === _.keyCodes.DOWN:
+      case event.keyCode === _.keyCodes.RIGHT:
         this.arrowRightAndDown(event);
         break;
 
-      case _.keyCodes.UP:
-      case _.keyCodes.LEFT:
+      case event.keyCode === _.keyCodes.UP:
+      case event.keyCode === _.keyCodes.LEFT:
         this.arrowLeftAndUp(event);
         break;
 
-      case _.keyCodes.TAB:
-        this.tabPressed(event);
+      case event.ctrlKey && event.keyCode === 55: // CTRL + 7 - using CTRL instead of SHIFT because SHIFT 7 would remove the ability of using "/" in your text
+      case event.keyCode === _.keyCodes.TAB:
+        this.toggleToolboxEvents(event);
         break;
     }
   }
@@ -127,7 +128,7 @@ export default class BlockEvents extends Module {
    *
    * @param {KeyboardEvent} event - tab keydown event
    */
-  public tabPressed(event): void {
+  public toggleToolboxEvents(event): void {
     /**
      * Clear blocks selection by tab
      */
@@ -143,13 +144,14 @@ export default class BlockEvents extends Module {
     const canOpenToolbox = Tools.isInitial(currentBlock.tool) && currentBlock.isEmpty;
     const conversionToolbarOpened = !currentBlock.isEmpty && ConversionToolbar.opened;
     const inlineToolbarOpened = !currentBlock.isEmpty && !SelectionUtils.isCollapsed && InlineToolbar.opened;
+    const isTabKeyPressed = event.keyCode === _.keyCodes.TAB;
 
     /**
      * For empty Blocks we show Plus button via Toolbox only for initial Blocks
      */
     if (canOpenToolbox) {
       this.activateToolbox();
-    } else if (!conversionToolbarOpened && !inlineToolbarOpened) {
+    } else if (!conversionToolbarOpened && !inlineToolbarOpened && !isTabKeyPressed) {
       this.activateBlockSettings();
     }
   }
@@ -514,7 +516,8 @@ export default class BlockEvents extends Module {
         blockSettingsItemSelected = (event.keyCode === _.keyCodes.ENTER && this.Editor.BlockSettings.opened),
         inlineToolbarItemSelected = (event.keyCode === _.keyCodes.ENTER && this.Editor.InlineToolbar.opened),
         conversionToolbarItemSelected = (event.keyCode === _.keyCodes.ENTER && this.Editor.ConversionToolbar.opened),
-        flippingToolbarItems = event.keyCode === _.keyCodes.TAB;
+        tabThroughOpenToolbar = (event.keyCode === _.keyCodes.TAB && this.Editor.Toolbar.opened),
+        flippingToolbarItems = (event.ctrlKey && event.keyCode === 7);
 
     /**
      * Do not close Toolbar in cases:
@@ -524,6 +527,7 @@ export default class BlockEvents extends Module {
      */
     return !(event.shiftKey ||
       flippingToolbarItems ||
+      tabThroughOpenToolbar ||
       toolboxItemSelected ||
       blockSettingsItemSelected ||
       inlineToolbarItemSelected ||
