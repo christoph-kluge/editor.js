@@ -5,6 +5,10 @@ Thumbs.db
 /*.sublime-project
 /*.sublime-workspace
 
+fussball.de/*
+dist/*
+example/tools/*
+
 node_modules/*
 
 npm-debug.log
