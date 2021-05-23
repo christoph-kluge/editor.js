@@ -129,6 +129,9 @@ export default class Paste extends Module {
   /** Patterns` substitutions parameters */
   private toolsPatterns: PatternSubstitute[] = [];
 
+  /** Patterns` substitutions parameters for the plain paste */
+  private toolsPlainPattern: PatternSubstitute[] = [];
+
   /** Files` substitutions parameters */
   private toolsFiles: {
     [tool: string]: FilesSubstitution;
@@ -198,6 +201,29 @@ export default class Paste extends Module {
     }
 
     /**
+     * If we have patterns for plainData, then we should process them before any other
+     */
+    if (this.toolsPlainPattern.length > 0) {
+      const plainPatternResult = await this.findToolForPlainPattern(plainData);
+
+      if (plainPatternResult) {
+        const content = $.make('div');
+        content.textContent = plainData;
+
+        console.log('plainPatternResult', plainPatternResult);
+
+        await this.processSingleBlock({
+          tool: plainPatternResult.tool,
+          content,
+          isBlock: true,
+          event: plainPatternResult.event,
+        });
+
+        return;
+      }
+    }
+
+    /**
      *  If text was drag'n'dropped, wrap content with P tag to insert it as the new Block
      */
     if (isDragNDrop && plainData.trim() && htmlData.trim()) {
@@ -214,6 +240,7 @@ export default class Paste extends Module {
     const customConfig = Object.assign({}, toolsTags, Sanitizer.getAllInlineToolsConfig(), { br: {} });
 
     const cleanData = Sanitizer.clean(htmlData, customConfig);
+
 
     /** If there is no HTML or HTML string is equal to plain one, process it as plain text */
     if (!cleanData.trim() || cleanData.trim() === plainData || !$.isHTMLString(cleanData)) {
@@ -309,6 +336,7 @@ export default class Paste extends Module {
       this.getTagsConfig(name, toolPasteConfig);
       this.getFilesConfig(name, toolPasteConfig);
       this.getPatternsConfig(name, toolPasteConfig);
+      this.getPlainPatternsConfig(name, toolPasteConfig);
     } catch (e) {
       _.log(
         `Paste handling for «${name}» Tool hasn't been set up because of the error`,
@@ -409,6 +437,37 @@ export default class Paste extends Module {
       }
 
       this.toolsPatterns.push({
+        key,
+        pattern,
+        tool: name,
+      });
+    });
+  }
+
+  /**
+   * Get patterns for the plain paste
+   *
+   * This might be useful if someone paste's a code-snippet from a third party provider.
+   * This could be a multi-line html snippet. In this case you're able to match the whole thing.
+   *
+   * @param {string} name - Tool name
+   * @param {PasteConfig} toolPasteConfig - Tool onPaste configuration
+   */
+  private getPlainPatternsConfig(name: string, toolPasteConfig: PasteConfig): void {
+    if (!toolPasteConfig.plainPatterns || _.isEmpty(toolPasteConfig.plainPatterns)) {
+      return;
+    }
+
+    Object.entries(toolPasteConfig.plainPatterns).forEach(([key, pattern]: [string, RegExp]) => {
+      /** Still need to validate pattern as it provided by user */
+      if (!(pattern instanceof RegExp)) {
+        _.log(
+          `PatternPlain ${pattern} for «${name}» Tool is skipped because it should be a Regexp instance.`,
+          'warn'
+        );
+      }
+
+      this.toolsPlainPattern.push({
         key,
         pattern,
         tool: name,
@@ -688,6 +747,38 @@ export default class Paste extends Module {
     } else {
       this.insertBlock(dataToInsert);
     }
+  }
+
+  /**
+   * Get patterns` matches (for the whole paste)
+   *
+   * @param {string} plainData - text to process
+   *
+   * @returns {Promise<{event: PasteEvent, tool: string}>}
+   */
+  private async findToolForPlainPattern(plainData: string): Promise<{event: PasteEvent; tool: string}> {
+    const pattern = this.toolsPlainPattern.find((substitute) => {
+      const execResult = substitute.pattern.exec(plainData);
+      if (!execResult) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (!pattern) {
+      return;
+    }
+
+    const event = this.composePasteEvent('plain', {
+      key: pattern.key,
+      data: plainData,
+    });
+
+    return {
+      event,
+      tool: pattern.tool,
+    };
   }
 
   /**
