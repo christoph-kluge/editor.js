@@ -435,19 +435,18 @@ export default class Paste extends Module {
    * This might be useful if someone paste's a code-snippet from a third party provider.
    * This could be a multi-line html snippet. In this case you're able to match the whole thing.
    *
-   * @param {string} name - Tool name
-   * @param {PasteConfig} toolPasteConfig - Tool onPaste configuration
+   * @param tool - BlockTool object
    */
-  private getPlainPatternsConfig(name: string, toolPasteConfig: PasteConfig): void {
-    if (!toolPasteConfig.plainPatterns || _.isEmpty(toolPasteConfig.plainPatterns)) {
+  private getPlainPatternsConfig(tool: BlockTool): void {
+    if (!tool.pasteConfig.plainPatterns || _.isEmpty(tool.pasteConfig.plainPatterns)) {
       return;
     }
 
-    Object.entries(toolPasteConfig.plainPatterns).forEach(([key, pattern]: [string, RegExp]) => {
+    Object.entries(tool.pasteConfig.plainPatterns).forEach(([key, pattern]: [string, RegExp]) => {
       /** Still need to validate pattern as it provided by user */
       if (!(pattern instanceof RegExp)) {
         _.log(
-          `PatternPlain ${pattern} for «${name}» Tool is skipped because it should be a Regexp instance.`,
+          `PatternPlain ${pattern} for «${tool.name}» Tool is skipped because it should be a Regexp instance.`,
           'warn'
         );
       }
@@ -455,7 +454,7 @@ export default class Paste extends Module {
       this.toolsPlainPattern.push({
         key,
         pattern,
-        tool: name,
+        tool,
       });
     });
   }
@@ -761,7 +760,7 @@ export default class Paste extends Module {
 
     return {
       event,
-      tool: pattern.tool,
+      tool: pattern.tool.name,
     };
   }
 
